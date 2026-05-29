@@ -1,0 +1,18 @@
+{
+  "id": "korean",
+  "description": "Korean AI-writing tells. In Korean, the fingerprint of AI-drafted or machine-translated text is 번역투 (translationese): English calques and stiff written-register phrases that a person writing plain Korean would not use. English-only linters cannot see these. Edit this list to fit your house style.",
+  "flags": "",
+  "rules": [
+    { "id": "ko-ui-gyeongu", "match": "의 경우", "hint": "Translationese, a calque of 'in the case of'. Use a plain topic marker 은/는, or drop it." },
+    { "id": "ko-ttaraseo", "match": "따라서", "hint": "Written/formal connector (the 'therefore' sense). In plain prose use 그래서." },
+    { "id": "ko-ttohan", "match": "또한", "hint": "Literary connector. Use 그리고, or start a new sentence." },
+    { "id": "ko-e-isseoseo", "match": "에 있어서", "hint": "Calque of 'in terms of / when it comes to'. Usually deletable." },
+    { "id": "ko-tonghae", "match": "(을|를) 통해", "hint": "Vague filler ('through / by way of'). Use 로/으로, or name the specific verb." },
+    { "id": "ko-hameurosseo", "match": "함으로써", "hint": "Formal written form. Use ~하면서 or ~해서." },
+    { "id": "ko-e-gwanhayeo", "match": "에 관하여", "hint": "Literary. Use 에 대해." },
+    { "id": "ko-hameul-al-su", "match": "함을 알 수 있다", "hint": "Academic register. Rewrite plainly: ~이에요 / ~라는 거예요." },
+    { "id": "ko-georeuro-boinda", "match": "것으로 (보인다|보입니다|판단된다|판단됩니다|분석된다|예상된다)", "hint": "Hedging calque common in machine-translated news. State it directly." },
+    { "id": "ko-rago-hal-su", "match": "라고 할 수 있다", "hint": "Academic hedge. Just state the point." },
+    { "id": "ko-mechanical-list", "match": "(첫째|둘째|셋째|넷째)", "hint": "Mechanical AI list-parallelism (첫째·둘째·셋째). Vary the phrasing or use a real list." }
+  ]
+}

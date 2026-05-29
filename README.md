@@ -26,6 +26,26 @@ slop-gate scans your prose for the patterns that mark writing as machine-generat
 
 slop-gate finds the tells. You write the fix.
 
+## The tells are not only English
+
+Humanizers like QuillBot and Undetectable AI are built for English. But in Korean, Russian, Vietnamese, and Chinese, the fingerprint of AI-drafted or machine-translated text is *translationese*: stiff English calques a native writer would never reach for. An English-only linter is blind to all of it.
+
+slop-gate ships a pack per language, so the same check that flags "delve" in English flags `의 경우` in Korean. The Korean pack catches the 번역투 tells: `의 경우` (a calque of "in the case of"), `따라서` used as a written "therefore," the vague `~을 통해`, mechanical `첫째·둘째·셋째` lists, and the hedging `~것으로 보인다` that machine-translated news leans on.
+
+**Before**, machine-translated Korean (five tells in three sentences):
+
+> 외국인등록증의 경우 신청 절차가 복잡합니다. 따라서 미리 준비하는 것이 좋습니다. 또한 신청서를 통해 정보를 제출함으로써 처리가 진행됩니다.
+
+**After**, plain Korean a person writes:
+
+> 외국인등록증은 신청 절차가 복잡해요. 그러니 미리 준비하는 게 좋아요. 신청서에 정보를 넣어서 제출하면 처리가 시작돼요.
+
+Language packs are off by default. Turn on the ones you publish in:
+
+```json
+{ "rules": ["punctuation", "vocabulary", "korean"] }
+```
+
 ## The Problem
 
 Large language models leave fingerprints. A handful of words and one punctuation mark show up far more often in AI-drafted text than in anything a person writes unprompted: the em-dash, "leverage," "delve into," "in today's fast-paced world," "a testament to." Readers have learned to spot them. The moment they do, your content reads as low-effort, and trust drops, even when the substance is fine.
@@ -105,7 +125,7 @@ That is the whole tool. No model, no network, no scoring. The lists are plain JS
 
 ## Configuration
 
-Drop a `slop-gate.config.json` in your project root, or pass paths on the command line. With no config, it scans `**/*.md`, `**/*.mdx`, and `**/*.txt` with both rule packs on.
+Drop a `slop-gate.config.json` in your project root, or pass paths on the command line. With no config, it scans `**/*.md`, `**/*.mdx`, and `**/*.txt` with the `punctuation` and `vocabulary` packs on. Language packs like `korean` are off by default; add them to `rules` to turn them on.
 
 ```json
 {
@@ -129,10 +149,11 @@ To skip one line on purpose, put `slop-gate-ignore` anywhere on it.
 
 ## The rule packs
 
-Two packs ship in [`rules/`](rules), as plain JSON:
+Three packs ship in [`rules/`](rules), as plain JSON:
 
 - **`punctuation`** flags the em-dash, the single most common AI tell.
-- **`vocabulary`** flags around forty words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
+- **`vocabulary`** flags around forty English words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
+- **`korean`** flags 번역투 (translationese): the English calques and stiff written-register phrases that mark Korean text as AI-drafted or machine-translated. Off by default; enable it with `"rules": ["punctuation", "vocabulary", "korean"]`.
 
 A rule is just an id, a pattern, and a hint:
 
@@ -167,7 +188,7 @@ Edit a pack to fit your house style, or add your own. The lists are the product,
 
 - `--fix` for the few swaps that are safe without judgment.
 - SARIF output, so findings show up in GitHub code scanning.
-- More packs: corporate filler, hedging, bureaucratic carry-over.
+- More language packs: Russian, Vietnamese, and Chinese translationese. More English packs too: corporate filler, hedging, bureaucratic carry-over.
 
 ## Contributing
 

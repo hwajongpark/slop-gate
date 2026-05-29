@@ -1,7 +1,7 @@
 {
   "name": "slop-gate",
-  "version": "0.1.0",
-  "description": "Catch AI writing-tells before they reach your readers.",
+  "version": "0.2.0",
+  "description": "Catch AI writing-tells before they ship. Zero-dependency CLI with editable per-language packs: the em-dash, ~40 English filler tells, and Korean translationese (번역투). Runs locally or in CI.",
   "bin": {
     "slop-gate": "bin/slop-gate.js"
   },
@@ -25,7 +25,11 @@
     "ci",
     "em-dash",
     "content",
-    "editorial"
+    "editorial",
+    "korean",
+    "translationese",
+    "multilingual",
+    "i18n"
   ],
   "author": "Hwajong (Howard) Park",
   "license": "MIT",

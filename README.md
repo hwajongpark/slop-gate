@@ -1,8 +1,6 @@
-<!--
-  BANNER: drop a 600x200 banner here before launch.
-  drag an image into a GitHub issue comment to get a CDN URL, then:
-  <p align="center"><img src="URL" alt="slop-gate" width="600"></p>
--->
+<p align="center">
+  <img src="assets/social-preview.png" alt="slop-gate, catch AI writing-tells before they reach your readers." width="820">
+</p>
 
 <p align="center">
   <img alt="npm version" src="https://img.shields.io/npm/v/slop-gate?color=black">
@@ -17,6 +15,16 @@
 Catch AI writing-tells before they reach your readers.
 
 slop-gate scans your prose for the patterns that mark writing as machine-generated: the em-dash, "leverage," "delve into," "a testament to," and the rest. It flags them while you can still fix them, on your machine or in CI, so the tells never ship. A style rule in a document is a suggestion you can skip. This is that rule made automatic.
+
+**Before**, an AI first draft (eight tells in two sentences):
+
+> In today's fast-paced world, we are excited to delve into a robust, seamless solution that will empower your team — and unlock a whole new tapestry of possibilities. Feel free to reach out.
+
+**After**, once slop-gate flags them and a person rewrites:
+
+> Our new dashboard cuts your weekly report from two hours to ten minutes. Questions? Email us.
+
+slop-gate finds the tells. You write the fix.
 
 ## The Problem
 
@@ -160,6 +168,16 @@ Edit a pack to fit your house style, or add your own. The lists are the product,
 - `--fix` for the few swaps that are safe without judgment.
 - SARIF output, so findings show up in GitHub code scanning.
 - More packs: corporate filler, hedging, bureaucratic carry-over.
+
+## Contributing
+
+The rule packs are the product, so the highest-value contribution is a tell. If a word or phrase reads as machine-generated to you and it is not on the list, open a pull request adding it to [`rules/vocabulary.json`](rules/vocabulary.json):
+
+```json
+{ "id": "elevate", "match": "\\belevate\\b", "hint": "Say what actually improves." }
+```
+
+One id, one pattern, one hint for what to write instead. False positives and bug reports are just as welcome: open an issue with the line that tripped.
 
 ## License
 

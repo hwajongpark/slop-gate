@@ -1,0 +1,17 @@
+{
+  "id": "russian",
+  "description": "Russian AI-writing tells. The fingerprint of AI-drafted or machine-translated Russian is канцелярит (bureaucratic register): split-predicate verbs, the copula 'является', and ministry set-phrases a person writing plain Russian would not reach for. Edit this list to fit your house style.",
+  "flags": "i",
+  "rules": [
+    { "id": "ru-yavlyaetsya", "match": "являются|является", "hint": "Bureaucratic copula. Use a dash predicate or «это»." },
+    { "id": "ru-osushchestvit", "match": "осуществ(ить|лять|ляется|ление)", "hint": "Split-predicate канцелярит. Use the direct verb: зарегистрироваться, сделать." },
+    { "id": "ru-proizvesti", "match": "произвести (оплату|расчёт|расчет|регистрацию)", "hint": "Split predicate. Use the plain verb: заплатить, зарегистрироваться." },
+    { "id": "ru-v-tselyakh", "match": "в целях", "hint": "Bureaucratic purpose construction. Use «чтобы» + verb." },
+    { "id": "ru-v-sluchae-vozn", "match": "в случае возникновения", "hint": "Calque of 'in case of'. Use «если возникнут»." },
+    { "id": "ru-sleduet-otmetit", "match": "следует отметить", "hint": "Empty filler. Delete it and start the sentence." },
+    { "id": "ru-nadlezhashchim", "match": "надлежащим образом", "hint": "Bureaucratic set phrase. Use «правильно»." },
+    { "id": "ru-v-sootvetstvii", "match": "в соответствии с", "hint": "Long prepositional chain. Often just «по закону» / «по правилам»." },
+    { "id": "ru-bylo-prinyato", "match": "было принято решение", "hint": "Passive depersonalization. Restore the actor: «мы решили»." },
+    { "id": "ru-dannyj", "match": "данн(ый|ая|ое|ого|ом)", "hint": "Official-document demonstrative. Use «этот». (Note: «данные» = data is fine.)" }
+  ]
+}

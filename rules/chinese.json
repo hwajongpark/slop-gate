@@ -1,0 +1,14 @@
+{
+  "id": "chinese",
+  "description": "Chinese AI-writing tells. The fingerprint of AI-drafted or machine-translated Chinese is 公文腔 (officialese): 进行+noun verb-padding, 予以, and stock ministry phrases where plain Mandarin is direct. Edit this list to fit your house style.",
+  "flags": "",
+  "rules": [
+    { "id": "zh-jinxing", "match": "进行(审核|处理|确认|登记|核实|审查|办理|缴纳|核对)", "hint": "公文腔 verb-padding (进行+noun). Use the verb directly: 审核, 处理." },
+    { "id": "zh-yuyi", "match": "予以", "hint": "Officialese. Use an active verb: 会退回, 会处理." },
+    { "id": "zh-anzhao-guiding", "match": "按照规定", "hint": "Filler. Usually deletable." },
+    { "id": "zh-empty-opener", "match": "众所周知|值得一提的是|不可否认", "hint": "Empty officialese opener. Delete it and start the sentence." },
+    { "id": "zh-raner", "match": "然而", "hint": "Literary pivot. Use «不过»." },
+    { "id": "zh-duiyu-front", "match": "对于", "hint": "If front-loaded, move the subject forward instead." },
+    { "id": "zh-xiangguan", "match": "相关(部门|材料|规定|人员|文件|信息)", "hint": "Vague 公文腔 (相关+noun). Name the specific thing." }
+  ]
+}

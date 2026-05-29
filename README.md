@@ -46,6 +46,8 @@ Language packs are off by default. Turn on the ones you publish in:
 { "rules": ["punctuation", "vocabulary", "korean"] }
 ```
 
+The `korean`, `russian`, `vietnamese`, and `chinese` packs all ship today; each catches its own language's translationese.
+
 ## The Problem
 
 Large language models leave fingerprints. A handful of words and one punctuation mark show up far more often in AI-drafted text than in anything a person writes unprompted: the em-dash, "leverage," "delve into," "in today's fast-paced world," "a testament to." Readers have learned to spot them. The moment they do, your content reads as low-effort, and trust drops, even when the substance is fine.
@@ -59,7 +61,7 @@ Anywhere prose ships and you want it to read like a person wrote it:
 - **Docs and marketing sites** where AI drafts the first pass and the tells survive into production.
 - **Blogs and newsletters** that publish often and cannot eyeball every paragraph.
 - **Anything translated or multi-author**, where one contributor's AI habit quietly becomes the house style.
-- **Teams with a style rule nobody enforces**, who want the rule to fail the build instead of living in a wiki.
+- **Teams with a style rule nobody enforces**, who want the rule enforced on every change instead of living in a wiki.
 
 ## Demo
 
@@ -149,11 +151,16 @@ To skip one line on purpose, put `slop-gate-ignore` anywhere on it.
 
 ## The rule packs
 
-Three packs ship in [`rules/`](rules), as plain JSON:
+Six packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
 
 - **`punctuation`** flags the em-dash, the single most common AI tell.
 - **`vocabulary`** flags around forty English words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
-- **`korean`** flags 번역투 (translationese): the English calques and stiff written-register phrases that mark Korean text as AI-drafted or machine-translated. Off by default; enable it with `"rules": ["punctuation", "vocabulary", "korean"]`.
+- **`korean`** flags 번역투 (translationese): the English calques and stiff written-register phrases that mark Korean text as AI-drafted or machine-translated.
+- **`russian`** flags канцелярит (bureaucratic Russian): the copula `является`, split-predicate verbs like `осуществить`, and ministry set-phrases.
+- **`vietnamese`** flags Hán-Việt overuse and calque connectors: `thực hiện`, `trong trường hợp`, `tuy nhiên`.
+- **`chinese`** flags 公文腔 (officialese): `进行`+noun padding, `予以`, `按照规定`, and stock openers like `众所周知`.
+
+Each rule carries a bilingual hint, the English reason plus the native-language fix. Turn a language pack on by adding it to `rules`, e.g. `"rules": ["punctuation", "vocabulary", "korean"]`.
 
 A rule is just an id, a pattern, and a hint:
 
@@ -188,7 +195,7 @@ Edit a pack to fit your house style, or add your own. The lists are the product,
 
 - `--fix` for the few swaps that are safe without judgment.
 - SARIF output, so findings show up in GitHub code scanning.
-- More language packs: Russian, Vietnamese, and Chinese translationese. More English packs too: corporate filler, hedging, bureaucratic carry-over.
+- More language packs, and more English packs: corporate filler, hedging, bureaucratic carry-over.
 
 ## Contributing
 

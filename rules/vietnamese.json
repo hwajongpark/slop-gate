@@ -1,0 +1,17 @@
+{
+  "id": "vietnamese",
+  "description": "Vietnamese AI-writing tells. The fingerprint of AI-drafted or machine-translated Vietnamese is Hán-Việt overuse and calque connectors: stiff Sino-Vietnamese verbs and 'in the case of'-style openers where plain Vietnamese is simpler and warmer. Edit this list to fit your house style.",
+  "flags": "i",
+  "rules": [
+    { "id": "vi-thuc-hien", "match": "thực hiện", "hint": "Hán-Việt for 'carry out'. Usually just «làm»." },
+    { "id": "vi-tien-hanh", "match": "tiến hành", "hint": "Hán-Việt. Usually just «làm»." },
+    { "id": "vi-luu-cu-tru", "match": "lưu trú|cư trú", "hint": "Hán-Việt for 'reside'. Use «ở» / «sống»." },
+    { "id": "vi-trong-truong-hop", "match": "trong trường hợp", "hint": "Calque of 'in the case of'. Use «nếu»." },
+    { "id": "vi-doi-voi", "match": "đối với", "hint": "Calque opener. Often deletable; just name the topic." },
+    { "id": "vi-tuy-nhien", "match": "tuy nhiên", "hint": "Formal connector. Use «nhưng», or restructure." },
+    { "id": "vi-do-do", "match": "do đó", "hint": "Formal connector. Often deletable, or use «nên»." },
+    { "id": "vi-bai-viet-nay", "match": "bài viết này sẽ", "hint": "Meta filler ('this article will...'). Delete it; start with the point." },
+    { "id": "vi-theo-quy-dinh", "match": "theo quy định hiện hành", "hint": "Bureaucratic filler. Drop it, or name the actual rule." },
+    { "id": "vi-dam-bao-rang", "match": "đảm bảo rằng", "hint": "Stiff. Use «nhớ» + the action." }
+  ]
+}

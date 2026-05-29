@@ -174,7 +174,7 @@ Edit a pack to fit your house style, or add your own. The lists are the product,
 
 The lists are not guesses. They track documented phenomena, and you can read every entry and the reason behind it.
 
-**The English tells track measured LLM word-frequency shifts.** Large studies of post-ChatGPT writing found a sudden rise in a specific set of words. [Liang et al. (*Nature Human Behaviour*, 2025)](https://www.nature.com/articles/s41562-025-02273-8) analysed over a million papers and flagged "realm," "intricate," "showcasing," and "pivotal" as words that were flat for a decade, then surged from 2023. A [2025 *Science Advances* study](https://www.science.org/doi/10.1126/sciadv.adt3813) of 15 million biomedical abstracts found the same excess-vocabulary signal; "delve" alone rose about 1,500% between 2022 and 2024. The `vocabulary` pack flags those exact words.
+**The English tells track measured LLM word-frequency shifts.** Large studies of post-ChatGPT writing found a sudden rise in a specific set of words. [Liang et al. (*Nature Human Behaviour*, 2025)](https://www.nature.com/articles/s41562-025-02273-8) analysed over a million papers and flagged "realm," "intricate," "showcasing," and "pivotal" as words that were flat for a decade, then surged from 2023. A [2025 *Science Advances* study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12219543/) of 15 million biomedical abstracts found the same excess-vocabulary signal; "delve" alone rose about 1,500% between 2022 and 2024. The `vocabulary` pack flags those exact words.
 
 **The translationese packs track named linguistic phenomena.** In each language, machine-drafted text carries the fingerprint of its source-language calques, and each language already has a name and an editorial tradition for it:
 

@@ -123,6 +123,12 @@ function loadConfig(explicitPath) {
 function loadRules(packNames) {
   const rules = [];
   for (const name of packNames) {
+    // Rule pack names index a file inside RULES_DIR. Reject anything that is not
+    // a plain identifier so a config cannot path-traverse out (e.g. "../../x").
+    if (!/^[A-Za-z0-9_-]+$/.test(name)) {
+      console.error(`slop-gate: invalid rule pack name "${name}"`);
+      process.exit(2);
+    }
     const file = path.join(RULES_DIR, `${name}.json`);
     if (!fs.existsSync(file)) {
       console.error(`slop-gate: no rule pack named "${name}" in ${RULES_DIR}`);

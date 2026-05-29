@@ -1,6 +1,6 @@
 {
   "name": "slop-gate",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Catch AI writing-tells before they ship. Zero-dependency CLI with editable, opt-in language packs for Korean, Russian, Vietnamese, Chinese, and Filipino, plus ~40 English tells and the em-dash. Runs locally or in CI.",
   "bin": {
     "slop-gate": "bin/slop-gate.js"

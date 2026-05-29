@@ -170,6 +170,21 @@ A rule is just an id, a pattern, and a hint:
 
 Edit a pack to fit your house style, or add your own. The lists are the product, and they are meant to be read.
 
+## Where the tells come from
+
+The lists are not guesses. They track documented phenomena, and you can read every entry and the reason behind it.
+
+**The English tells track measured LLM word-frequency shifts.** Large studies of post-ChatGPT writing found a sudden rise in a specific set of words. [Liang et al. (*Nature Human Behaviour*, 2025)](https://www.nature.com/articles/s41562-025-02273-8) analysed over a million papers and flagged "realm," "intricate," "showcasing," and "pivotal" as words that were flat for a decade, then surged from 2023. A [2025 *Science Advances* study](https://www.science.org/doi/10.1126/sciadv.adt3813) of 15 million biomedical abstracts found the same excess-vocabulary signal; "delve" alone rose about 1,500% between 2022 and 2024. The `vocabulary` pack flags those exact words.
+
+**The translationese packs track named linguistic phenomena.** In each language, machine-drafted text carries the fingerprint of its source-language calques, and each language already has a name and an editorial tradition for it:
+
+- **Russian** — канцелярит, the bureaucratic register Kornei Chukovsky called the central disease of the language, and the target of Maxim Ilyakhov's standard plain-writing guide *Пиши, сокращай*.
+- **Korean** — 번역투, the translationese studied in Korean translation scholarship.
+- **Chinese** — 公文腔, the officialese register of government documents.
+- **Vietnamese** — Hán-Việt overuse, leaning on Sino-Vietnamese vocabulary where plain native words are simpler.
+
+The tool does not score or detect authorship; it flags the specific, documented patterns above so you can decide. Which entries make the list is an editorial call, but the categories are not invented.
+
 ## Design Decisions
 
 **Enforced, not advised.** The point of the tool is the exit code. A rule in a wiki is advice; a non-zero exit is a stop sign. Everything else here exists to make that stop sign trustworthy enough to leave on.

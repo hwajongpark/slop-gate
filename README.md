@@ -28,7 +28,7 @@ slop-gate finds the tells. You write the fix.
 
 ## The tells are not only English
 
-Humanizers like QuillBot and Undetectable AI are built for English. But in Korean, Russian, Vietnamese, and Chinese, the fingerprint of AI-drafted or machine-translated text is *translationese*: stiff English calques a native writer would never reach for. An English-only linter is blind to all of it.
+Humanizers like QuillBot and Undetectable AI are built for English. But in Korean, Russian, Vietnamese, Chinese, and Filipino, the fingerprint of AI-drafted or machine-translated text is *translationese* and over-formal register: stiff calques and bookish words a native writer would never reach for. An English-only linter is blind to all of it.
 
 slop-gate ships a pack per language, so the same check that flags "delve" in English flags `의 경우` in Korean. The Korean pack catches the 번역투 tells: `의 경우` (a calque of "in the case of"), `따라서` used as a written "therefore," the vague `~을 통해`, mechanical `첫째·둘째·셋째` lists, and the hedging `~것으로 보인다` that machine-translated news leans on.
 
@@ -46,7 +46,7 @@ Language packs are off by default. Turn on the ones you publish in:
 { "rules": ["punctuation", "vocabulary", "korean"] }
 ```
 
-The `korean`, `russian`, `vietnamese`, and `chinese` packs all ship today; each catches its own language's translationese.
+The `korean`, `russian`, `vietnamese`, `chinese`, and `filipino` packs all ship today; each catches its own language's tells.
 
 ## The Problem
 
@@ -151,7 +151,7 @@ To skip one line on purpose, put `slop-gate-ignore` anywhere on it.
 
 ## The rule packs
 
-Six packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
+Seven packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
 
 - **`punctuation`** flags the em-dash, the single most common AI tell.
 - **`vocabulary`** flags around forty English words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
@@ -159,6 +159,7 @@ Six packs ship in [`rules/`](rules), as plain JSON. The English packs are on by 
 - **`russian`** flags канцелярит (bureaucratic Russian): the copula `является`, split-predicate verbs like `осуществить`, and ministry set-phrases.
 - **`vietnamese`** flags Hán-Việt overuse and calque connectors: `thực hiện`, `trong trường hợp`, `tuy nhiên`.
 - **`chinese`** flags 公文腔 (officialese): `进行`+noun padding, `予以`, `按照规定`, and stock openers like `众所周知`.
+- **`filipino`** flags over-formal literary Tagalog and calque openers (`upang`, `sa pamamagitan ng`, `Ito ay isang gabay`), where editorial Filipino is conversational Taglish.
 
 Each rule carries a bilingual hint, the English reason plus the native-language fix. Turn a language pack on by adding it to `rules`, e.g. `"rules": ["punctuation", "vocabulary", "korean"]`.
 
@@ -176,12 +177,13 @@ The lists are not guesses. They track documented phenomena, and you can read eve
 
 **The English tells track measured LLM word-frequency shifts.** Large studies of post-ChatGPT writing found a sudden rise in a specific set of words. [Liang et al. (*Nature Human Behaviour*, 2025)](https://www.nature.com/articles/s41562-025-02273-8) analysed over a million papers and flagged "realm," "intricate," "showcasing," and "pivotal" as words that were flat for a decade, then surged from 2023. A [2025 *Science Advances* study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12219543/) of 15 million biomedical abstracts found the same excess-vocabulary signal; "delve" alone rose about 1,500% between 2022 and 2024. The `vocabulary` pack flags those exact words.
 
-**The translationese packs track named linguistic phenomena.** In each language, machine-drafted text carries the fingerprint of its source-language calques, and each language already has a name and an editorial tradition for it:
+**The language packs track named linguistic phenomena.** Machine-drafted text carries a recognizable fingerprint, usually source-language calques, sometimes an over-formal register, and each language already has a name and an editorial tradition for it:
 
 - **Russian** — канцелярит, the bureaucratic register Kornei Chukovsky called the central disease of the language, and the target of Maxim Ilyakhov's standard plain-writing guide *Пиши, сокращай*.
 - **Korean** — 번역투, the translationese studied in Korean translation scholarship.
 - **Chinese** — 公文腔, the officialese register of government documents.
 - **Vietnamese** — Hán-Việt overuse, leaning on Sino-Vietnamese vocabulary where plain native words are simpler.
+- **Filipino** — over-formal literary Tagalog and po/opo register where editorial Filipino (Rappler, GMA) is conversational Taglish, plus calque openers like *sa kaso ng* ("in the case of").
 
 The tool does not score or detect authorship; it flags the specific, documented patterns above so you can decide. Which entries make the list is an editorial call, but the categories are not invented.
 

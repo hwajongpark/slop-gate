@@ -1,0 +1,16 @@
+{
+  "id": "filipino",
+  "description": "Filipino AI-writing tells. AI-drafted Filipino drifts toward literary or over-formal Tagalog, calque openers, and meta phrasing, where natural editorial Filipino (Rappler, GMA) is conversational Taglish. This pack flags the formal words and stock openers that read as machine-generated. Edit this list to fit your house style.",
+  "flags": "i",
+  "rules": [
+    { "id": "fil-upang", "match": "\\bupang\\b", "hint": "Literary. The editorial default is «para»." },
+    { "id": "fil-sa-pamamagitan", "match": "sa pamamagitan ng", "hint": "Formal/calque ('by means of'). Use «gamit ang», or the specific verb." },
+    { "id": "fil-hinggil-sa", "match": "hinggil sa", "hint": "Rarely used in modern Filipino. Use «tungkol sa»." },
+    { "id": "fil-samakatuwid", "match": "\\bsamakatuwid\\b", "hint": "Formal connector. Use «kaya»." },
+    { "id": "fil-pamahalaan", "match": "\\bpamahalaan\\b", "hint": "Formal. The editorial word is «gobyerno»." },
+    { "id": "fil-ito-ay-gabay", "match": "ito ay (isang )?gabay", "hint": "Definition opener ('this is a guide'). Open with the reader's problem instead." },
+    { "id": "fil-nais-naming", "match": "nais naming ipaalam", "hint": "Meta filler ('we wish to inform you'). Drop it; state the information." },
+    { "id": "fil-sa-kaso", "match": "sa kaso(ng)?", "hint": "Calque of 'in the case of'. Use «kapag» / «kung»." },
+    { "id": "fil-po", "match": "\\b(opo|po)\\b", "hint": "Po/opo reads as social-media or over-polite register; editorial Filipino drops it in body copy. Keep it only in a reassurance line." }
+  ]
+}

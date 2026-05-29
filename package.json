@@ -1,7 +1,7 @@
 {
   "name": "slop-gate",
-  "version": "0.3.0",
-  "description": "Catch AI writing-tells before they ship. Zero-dependency CLI with editable, opt-in translationese packs for Korean, Russian, Vietnamese, and Chinese, plus ~40 English tells and the em-dash. Runs locally or in CI.",
+  "version": "0.4.0",
+  "description": "Catch AI writing-tells before they ship. Zero-dependency CLI with editable, opt-in language packs for Korean, Russian, Vietnamese, Chinese, and Filipino, plus ~40 English tells and the em-dash. Runs locally or in CI.",
   "bin": {
     "slop-gate": "bin/slop-gate.js"
   },
@@ -32,7 +32,9 @@
     "i18n",
     "russian",
     "vietnamese",
-    "chinese"
+    "chinese",
+    "filipino",
+    "tagalog"
   ],
   "author": "Hwajong (Howard) Park",
   "license": "MIT",

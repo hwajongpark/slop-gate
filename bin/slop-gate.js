@@ -2,16 +2,16 @@
 /**
  * slop-gate
  *
- * Fail your build when AI writing-tells slip into your prose.
+ * Catch AI writing-tells before they reach your readers.
  *
  * Zero dependencies. Scans text files for two kinds of tell:
  *   - punctuation tells (the em-dash)
  *   - vocabulary tells  (the words and phrases that show up far more often
  *                        in AI-drafted text than in anything a person writes)
  *
- * Exit code: 0 if clean, 1 if any tell is found. That non-zero exit is the
- * whole point: a style rule in a document is a suggestion, a failing build
- * is a decision.
+ * Exit code: 0 if clean, 1 if any tell is found. The non-zero exit is the
+ * whole point: it turns a style rule you can skip into a check that runs
+ * every time, locally or in CI.
  */
 
 "use strict";
@@ -30,7 +30,7 @@ const DEFAULT_CONFIG = {
 };
 
 const HELP = `slop-gate ${VERSION}
-Fail your build when AI writing-tells slip into your prose.
+Catch AI writing-tells before they reach your readers.
 
 Usage:
   slop-gate [paths...] [options]
@@ -268,7 +268,7 @@ function main() {
   const fileCount = byFile.size;
   console.error("");
   console.error(
-    `slop-gate: ${findings.length} tell${findings.length === 1 ? "" : "s"} in ${fileCount} file${fileCount === 1 ? "" : "s"}. Build failed.`,
+    `slop-gate: ${findings.length} tell${findings.length === 1 ? "" : "s"} in ${fileCount} file${fileCount === 1 ? "" : "s"}. Fix these before publishing.`,
   );
   process.exit(1);
 }

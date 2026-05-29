@@ -1,7 +1,7 @@
 {
   "name": "slop-gate",
   "version": "0.1.0",
-  "description": "Fail your build when AI writing-tells slip into your prose.",
+  "description": "Catch AI writing-tells before they reach your readers.",
   "bin": {
     "slop-gate": "bin/slop-gate.js"
   },

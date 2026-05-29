@@ -12,9 +12,9 @@
 
 # slop-gate
 
-Fail your build when AI writing-tells slip into your prose.
+Catch AI writing-tells before they reach your readers.
 
-A style rule in a document is a suggestion. A build that fails is a decision. slop-gate is the second one: a tiny check that scans your text, flags the words and punctuation that mark writing as machine-generated, and exits non-zero so the merge stops until they are gone.
+slop-gate scans your prose for the patterns that mark writing as machine-generated: the em-dash, "leverage," "delve into," "a testament to," and the rest. It flags them while you can still fix them, on your machine or in CI, so the tells never ship. A style rule in a document is a suggestion you can skip. This is that rule made automatic.
 
 ## The Problem
 
@@ -54,10 +54,10 @@ examples/sample.md:4:44  unlock
 examples/sample.md:4:63  tapestry
   tapestry: A classic AI tell. Be literal about what is there.
 
-slop-gate: 11 tells in 1 file. Build failed.
+slop-gate: 11 tells in 1 file. Fix these before publishing.
 ```
 
-Exit code is 1. In CI, that fails the job.
+Exit code is 1, so a CI job stops here until the tells are gone.
 
 ## Quick Start
 
@@ -134,7 +134,7 @@ Edit a pack to fit your house style, or add your own. The lists are the product,
 
 ## Design Decisions
 
-**A failing build, not a guideline.** The point of the tool is the exit code. A rule in a wiki is advice; a non-zero exit is a stop sign. Everything else here exists to make that stop sign trustworthy enough to leave on.
+**Enforced, not advised.** The point of the tool is the exit code. A rule in a wiki is advice; a non-zero exit is a stop sign. Everything else here exists to make that stop sign trustworthy enough to leave on.
 
 **Word lists, not a model.** It would be possible to ask an AI "does this read as AI-written?" That is slow, costs money on every check, gives a different answer each run, and cannot tell you which word to change. A fixed list is instant, free, identical every time, and points at the exact token. The catch is that it only catches what is on the list, so the list is the thing worth maintaining. That is a feature: you can read it.
 

@@ -1,0 +1,39 @@
+{
+  "name": "slop-gate",
+  "version": "0.1.0",
+  "description": "Fail your build when AI writing-tells slip into your prose.",
+  "bin": {
+    "slop-gate": "bin/slop-gate.js"
+  },
+  "type": "commonjs",
+  "files": [
+    "bin",
+    "rules"
+  ],
+  "scripts": {
+    "demo": "node bin/slop-gate.js examples/sample.md || true",
+    "test": "node test/run.js"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "ai-detection",
+    "slop",
+    "writing",
+    "prose",
+    "linter",
+    "ci",
+    "em-dash",
+    "content",
+    "editorial"
+  ],
+  "author": "Hwajong (Howard) Park",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwajongpark/slop-gate.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

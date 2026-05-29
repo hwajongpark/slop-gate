@@ -1,0 +1,11 @@
+{
+  "id": "punctuation",
+  "description": "Punctuation patterns that read as machine-generated.",
+  "rules": [
+    {
+      "id": "em-dash",
+      "match": "—",
+      "hint": "The em-dash is the single most common AI-writing tell. Use a comma, a colon, or split the sentence. Allowlist this rule for languages where the em-dash is correct grammar."
+    }
+  ]
+}

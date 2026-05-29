@@ -1,0 +1,12 @@
+# Secrets
+.env
+.env.local
+.env*.local
+*.key
+*.pem
+secrets/
+
+# Dev artifacts
+node_modules/
+.DS_Store
+*.log

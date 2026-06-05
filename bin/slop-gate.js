@@ -71,7 +71,7 @@ function parseArgs(argv) {
 // Translate a glob into an anchored RegExp. Supports ** (any depth), * (one
 // path segment), and ? (one character). Paths are compared POSIX-style.
 function globToRegExp(glob) {
-  const g = glob.replace(/\\/g, "/");
+  const g = glob.replace(/\\/g, "/").replace(/^\.\//, "");
   let re = "";
   for (let i = 0; i < g.length; i++) {
     const c = g[i];
@@ -168,17 +168,42 @@ function* walk(dir) {
 }
 
 function collectFiles(config, cliPaths) {
-  const includeGlobs = (cliPaths.length ? cliPaths : config.include).map(globToRegExp);
   const excludeGlobs = config.exclude.map(globToRegExp);
-  // If the caller passed explicit existing files, take them as-is.
-  const explicitFiles = cliPaths.filter(
-    (p) => fs.existsSync(p) && fs.statSync(p).isFile(),
-  );
-  const out = new Set(explicitFiles.map((p) => toPosix(path.relative(process.cwd(), p))));
-  for (const abs of walk(process.cwd())) {
-    const rel = toPosix(path.relative(process.cwd(), abs));
-    if (excludeGlobs.some((re) => re.test(rel))) continue;
-    if (includeGlobs.some((re) => re.test(rel))) out.add(rel);
+  const out = new Set();
+  const dirRoots = [];
+  const globPatterns = [];
+
+  function addFile(input) {
+    const rel = toPosix(path.relative(process.cwd(), input));
+    if (!excludeGlobs.some((re) => re.test(rel))) out.add(rel);
+  }
+
+  function addMatches(root, patterns) {
+    const includeGlobs = patterns.map(globToRegExp);
+    for (const abs of walk(root)) {
+      const rel = toPosix(path.relative(process.cwd(), abs));
+      if (excludeGlobs.some((re) => re.test(rel))) continue;
+      if (includeGlobs.some((re) => re.test(rel))) out.add(rel);
+    }
+  }
+
+  if (cliPaths.length === 0) {
+    addMatches(process.cwd(), config.include);
+  } else {
+    for (const input of cliPaths) {
+      if (fs.existsSync(input)) {
+        const stat = fs.statSync(input);
+        if (stat.isFile()) {
+          addFile(input);
+        } else if (stat.isDirectory()) {
+          dirRoots.push(path.resolve(input));
+        }
+      } else {
+        globPatterns.push(input);
+      }
+    }
+    for (const root of dirRoots) addMatches(root, config.include);
+    if (globPatterns.length > 0) addMatches(process.cwd(), globPatterns);
   }
   return [...out].sort();
 }

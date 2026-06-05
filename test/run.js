@@ -71,4 +71,17 @@ test("path allowlist suppresses a rule", () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+test("directory argument scans matching files below it", () => {
+  const { code, stdout } = run(["examples"]);
+  assert.strictEqual(code, 1, "expected non-zero exit on dirty files under directory");
+  assert.match(stdout, /examples\/sample\.md/);
+  assert.match(stdout, /11 tells in 1 file/);
+});
+
+test("leading-dot globs match repository-relative files", () => {
+  const { code, stdout } = run(["./examples/**/*.md"]);
+  assert.strictEqual(code, 1, "expected non-zero exit on dirty file matched by ./ glob");
+  assert.match(stdout, /examples\/sample\.md/);
+});
+
 console.log(`\n${passed} passed`);

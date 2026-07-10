@@ -1,11 +1,25 @@
 {
-  "include": ["**/*.md", "**/*.mdx"],
-  "exclude": ["node_modules/**", "CHANGELOG.md"],
-  "rules": ["punctuation", "vocabulary"],
+  "include": [
+    "**/*.md",
+    "**/*.mdx"
+  ],
+  "exclude": [
+    "node_modules/**",
+    "CHANGELOG.md"
+  ],
+  "rules": [
+    "punctuation",
+    "vocabulary"
+  ],
   "allow": [
     {
-      "paths": ["content/de/**", "content/ru/**"],
-      "rules": ["em-dash"]
+      "paths": [
+        "content/ru/**",
+        "content/ja/**"
+      ],
+      "rules": [
+        "em-dash"
+      ]
     }
   ]
 }

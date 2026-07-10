@@ -80,11 +80,17 @@ examples/sample.md:3:69  seamless
 examples/sample.md:4:20  empower
   empower: Say what the reader can now do.
 examples/sample.md:4:38  —
-  em-dash: The em-dash is the single most common AI-writing tell. Use a comma, a colon, or split the sentence.
+  em-dash: The em-dash is the single most common AI-writing tell. Use a comma, a colon, or split the sentence. Allowlist this rule for languages where the em-dash is native punctuation, like Russian or Japanese.
 examples/sample.md:4:44  unlock
   unlock: Say what becomes available.
 examples/sample.md:4:63  tapestry
   tapestry: A classic AI tell. Be literal about what is there.
+examples/sample.md:7:1  Feel free to
+  feel-free: State the action directly.
+examples/sample.md:7:25  At the end of the day
+  end-of-the-day: Cut it. State the point.
+examples/sample.md:7:64  a testament to
+  testament: Say what it proves, plainly.
 
 slop-gate: 11 tells in 1 file. Fix these before publishing.
 ```
@@ -121,7 +127,9 @@ jobs:
 
 ## How It Works
 
-You point it at your text. It reads each file line by line and checks every line against two lists: a punctuation list (the em-dash) and a vocabulary list (the words and phrases that read as machine-generated). When a line matches, it prints the file, the line, the column, the exact text it found, and a one-line hint for what to do instead. If it found anything, it exits 1.
+You point it at your text: a file, a directory, or a glob. It reads each file line by line and checks every line against two lists: a punctuation list (the em-dash) and a vocabulary list (the words and phrases that read as machine-generated). When a line matches, it prints the file, the line, the column, the exact text it found, and a one-line hint for what to do instead. If it found anything, it exits 1. If nothing matched your paths at all, it warns loudly on stderr that 0 files were scanned, so a misconfigured CI job can never look green by scanning nothing.
+
+Fenced code blocks are skipped by default, because a code sample quoting bad copy is not your prose (scan them anyway with `--include-code`). One known limit of line-by-line scanning: a multi-word tell split across a hard line break is not matched.
 
 That is the whole tool. No model, no network, no scoring. The lists are plain JSON you can read and edit.
 
@@ -136,7 +144,7 @@ Drop a `slop-gate.config.json` in your project root, or pass paths on the comman
   "rules": ["punctuation", "vocabulary"],
   "allow": [
     {
-      "paths": ["content/de/**", "content/ru/**"],
+      "paths": ["content/ru/**", "content/ja/**"],
       "rules": ["em-dash"]
     }
   ]
@@ -145,9 +153,25 @@ Drop a `slop-gate.config.json` in your project root, or pass paths on the comman
 
 - **`include` / `exclude`** are globs (`**` for any depth, `*` for one path segment).
 - **`rules`** lists which built-in packs to load.
-- **`allow`** turns specific rules off for specific paths. The example above keeps the em-dash banned everywhere except the German and Russian content, where it is correct grammar. You can allowlist a whole pack by id, or a single rule by id.
+- **`allow`** turns specific rules off for specific paths. The example above keeps the em-dash banned everywhere except the Russian and Japanese content, where it is native punctuation. You can allowlist a whole pack by id, or a single rule by id.
 
-To skip one line on purpose, put `slop-gate-ignore` anywhere on it.
+To skip one line on purpose, put `slop-gate-ignore` anywhere on it. Where an inline marker cannot go (MDX has no HTML comments), put `slop-gate-ignore-next` on the line above, for example `{/* slop-gate-ignore-next */}`.
+
+## Adopting on an existing codebase
+
+A corpus with hundreds of existing tells cannot turn on a hard gate overnight, and allowlisting whole directories would also stop protecting the new writing in them. The baseline mode splits the difference: gate new writing today, pay down the old debt gradually.
+
+```bash
+# Freeze today's per-file counts into .slop-gate-baseline.json:
+npx slop-gate --write-baseline
+
+# In CI, compare against the frozen counts instead of failing on everything:
+npx slop-gate --baseline
+```
+
+`--baseline` fails only when a file's tell count grows past its baselined count, or when a file the baseline does not list has tells. Existing debt passes; new debt does not, so the number can only go down. When you clean a file below its baselined count, slop-gate reports the improvement and suggests re-running `--write-baseline` to lock the lower counts in.
+
+Commit the baseline file to your repo so CI and every contributor compare against the same counts. Both flags take an optional `.json` path if you want the file somewhere else.
 
 ## The rule packs
 
@@ -195,7 +219,7 @@ The tool does not score or detect authorship; it flags the specific, documented 
 
 **It is not a detector.** This does not judge whether text was written by a machine. A person can trip every rule and a model can avoid them all. It flags specific patterns you chose to ban. Pretending to detect AI authorship would be a lie the tool cannot back up.
 
-**Allowlist by path, because a tell in one language is grammar in another.** The em-dash is a tell in English marketing copy and correct punctuation in German or Russian. A global ban would force you to mangle the languages that use it. So rules turn off per path, and the rest of your text stays protected.
+**Allowlist by path, because a tell in one language is grammar in another.** The em-dash is a tell in English marketing copy and native punctuation in Russian and Japanese: Russian uses it as the copula and for apposition, and Japanese uses the dash for pauses, parentheticals, and ranges. A global ban would force you to mangle the languages that use it. So rules turn off per path, and the rest of your text stays protected.
 
 **Zero dependencies.** A check you add to CI should not pull in a tree of packages that themselves need watching. It is one file of Node and two JSON lists. It runs anywhere Node 18 runs, offline.
 
@@ -207,6 +231,7 @@ The tool does not score or detect authorship; it flags the specific, documented 
 - It does not rewrite your text. It shows you the line; the edit is yours.
 - It does not understand context. "Robust" is fine in a statistics paper. Allowlist the rule for that path, or ignore the line.
 - It does not check grammar, spelling, or readability. Use a real linter for those. This does one narrow thing.
+- It does not match across line breaks. It scans line by line, so a multi-word tell split by a hard wrap ("a testament" at the end of one line, "to" at the start of the next) is missed. Text with unwrapped paragraphs is checked fully.
 
 ## Roadmap
 

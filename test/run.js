@@ -2,10 +2,12 @@
 
 // Zero-dependency smoke test. Runs the CLI as a child process and checks the
 // behavior that matters: it finds the seeded tells, it exits non-zero when it
-// does, it exits zero on clean text, and the path allowlist suppresses a rule.
+// does, it exits zero on clean text, the path allowlist suppresses a rule,
+// directory arguments scan the files under them, and the baseline mode fails
+// only when the debt grows.
 
 const assert = require("node:assert");
-const { execFileSync } = require("node:child_process");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -14,16 +16,26 @@ const CLI = path.join(__dirname, "..", "bin", "slop-gate.js");
 const REPO = path.join(__dirname, "..");
 
 function run(args, cwd) {
-  try {
-    const stdout = execFileSync("node", [CLI, ...args], {
-      cwd: cwd || REPO,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    return { code: 0, stdout };
-  } catch (e) {
-    return { code: e.status, stdout: (e.stdout || "") + (e.stderr || "") };
+  const r = spawnSync("node", [CLI, ...args], {
+    cwd: cwd || REPO,
+    encoding: "utf8",
+  });
+  return {
+    code: r.status,
+    stdout: r.stdout,
+    stderr: r.stderr,
+    out: r.stdout + r.stderr,
+  };
+}
+
+function tmpProject(files) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slop-gate-"));
+  for (const [rel, content] of Object.entries(files)) {
+    const full = path.join(tmp, rel);
+    fs.mkdirSync(path.dirname(full), { recursive: true });
+    fs.writeFileSync(full, content);
   }
+  return tmp;
 }
 
 let passed = 0;
@@ -34,40 +46,180 @@ function test(name, fn) {
 }
 
 test("flags seeded tells in the sample and exits 1", () => {
-  const { code, stdout } = run(["examples/sample.md"]);
+  const { code, out } = run(["examples/sample.md"]);
   assert.strictEqual(code, 1, "expected non-zero exit on dirty file");
-  assert.match(stdout, /em-dash/);
-  assert.match(stdout, /delve/);
-  assert.match(stdout, /11 tells in 1 file/);
+  assert.match(out, /em-dash/);
+  assert.match(out, /delve/);
+  assert.match(out, /11 tells in 1 file/);
 });
 
 test("exits 0 on clean text", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slop-gate-"));
-  fs.writeFileSync(path.join(tmp, "clean.md"), "This sentence is plain and direct.\n");
-  const { code, stdout } = run(["clean.md"], tmp);
+  const tmp = tmpProject({ "clean.md": "This sentence is plain and direct.\n" });
+  const { code, out } = run(["clean.md"], tmp);
   assert.strictEqual(code, 0, "expected zero exit on clean file");
-  assert.match(stdout, /clean/);
+  assert.match(out, /clean/);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
 test("path allowlist suppresses a rule", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "slop-gate-"));
-  fs.mkdirSync(path.join(tmp, "content", "ru"), { recursive: true });
-  fs.mkdirSync(path.join(tmp, "content", "en"), { recursive: true });
-  fs.writeFileSync(path.join(tmp, "content", "ru", "a.md"), "Тире — здесь нормально.\n");
-  fs.writeFileSync(path.join(tmp, "content", "en", "b.md"), "This dash — should fail.\n");
-  fs.writeFileSync(
-    path.join(tmp, "slop-gate.config.json"),
-    JSON.stringify({
+  const tmp = tmpProject({
+    "content/ru/a.md": "Тире — здесь нормально.\n",
+    "content/en/b.md": "This dash — should fail.\n",
+    "slop-gate.config.json": JSON.stringify({
       include: ["**/*.md"],
       rules: ["punctuation"],
       allow: [{ paths: ["content/ru/**"], rules: ["em-dash"] }],
     }),
-  );
-  const { code, stdout } = run([], tmp);
+  });
+  const { code, out } = run([], tmp);
   assert.strictEqual(code, 1);
-  assert.match(stdout, /content\/en\/b\.md/);
-  assert.doesNotMatch(stdout, /content\/ru\/a\.md/, "ru path should be allowlisted");
+  assert.match(out, /content\/en\/b\.md/);
+  assert.doesNotMatch(out, /content\/ru\/a\.md/, "ru path should be allowlisted");
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("a ./dir argument scans the files under it", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this.\n",
+    "content/deep/b.md": "A robust plan.\n",
+    "elsewhere/c.md": "Seamless everywhere.\n",
+  });
+  const { code, out } = run(["./content"], tmp);
+  assert.strictEqual(code, 1, "expected findings under ./content");
+  assert.match(out, /content\/a\.md/);
+  assert.match(out, /content\/deep\/b\.md/, "should recurse into subdirectories");
+  assert.doesNotMatch(out, /elsewhere\/c\.md/, "must not scan outside the directory");
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("a bare dir argument scans the files under it", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this.\n",
+    "content/skip.py": "delve = 1\n",
+  });
+  const { code, out } = run(["content"], tmp);
+  assert.strictEqual(code, 1);
+  assert.match(out, /content\/a\.md/);
+  assert.doesNotMatch(out, /skip\.py/, "directory scan keeps the include file types");
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("glob arguments still work", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this.\n",
+    "content/b.txt": "A robust plan.\n",
+  });
+  const { code, out } = run(["content/**/*.md"], tmp);
+  assert.strictEqual(code, 1);
+  assert.match(out, /content\/a\.md/);
+  assert.doesNotMatch(out, /content\/b\.txt/, "glob should only match .md");
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("warns loudly when 0 files are scanned, still exits 0", () => {
+  const tmp = tmpProject({ "notes.py": "delve = 1\n" });
+  const { code, stderr } = run(["no-such-dir/**/*.md"], tmp);
+  assert.strictEqual(code, 0, "an empty match is not a failure");
+  assert.match(stderr, /warning: 0 files scanned/i);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("--write-baseline freezes counts and --baseline passes at parity", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this robust plan.\n",
+  });
+  const w = run(["--write-baseline"], tmp);
+  assert.strictEqual(w.code, 0);
+  assert.match(w.out, /baseline written/);
+  const baseline = JSON.parse(fs.readFileSync(path.join(tmp, ".slop-gate-baseline.json"), "utf8"));
+  assert.strictEqual(baseline.files["content/a.md"], 2, "baseline should record per-file counts");
+  const b = run(["--baseline"], tmp);
+  assert.strictEqual(b.code, 0, "unchanged debt should pass the baseline");
+  assert.match(b.out, /within the baseline/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("--baseline fails when a file's count grows", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this robust plan.\n",
+  });
+  run(["--write-baseline"], tmp);
+  fs.appendFileSync(path.join(tmp, "content/a.md"), "A seamless addition.\n");
+  const { code, out } = run(["--baseline"], tmp);
+  assert.strictEqual(code, 1, "grown count must fail");
+  assert.match(out, /content\/a\.md: 3 tells, baseline allows 2/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("--baseline fails on a new file with findings", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this.\n",
+  });
+  run(["--write-baseline"], tmp);
+  fs.writeFileSync(path.join(tmp, "content/new.md"), "A robust newcomer.\n");
+  const { code, out } = run(["--baseline"], tmp);
+  assert.strictEqual(code, 1, "new dirty file must fail");
+  assert.match(out, /content\/new\.md: 1 tell in a file the baseline does not list/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("--baseline passes and reports improvement when a count shrinks", () => {
+  const tmp = tmpProject({
+    "content/a.md": "We will delve into this robust plan.\n",
+  });
+  run(["--write-baseline"], tmp);
+  fs.writeFileSync(path.join(tmp, "content/a.md"), "We will delve into this plan.\n");
+  const { code, out } = run(["--baseline"], tmp);
+  assert.strictEqual(code, 0, "shrunk count should pass");
+  assert.match(out, /1 file improved/);
+  assert.match(out, /--write-baseline/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("--baseline without a baseline file exits 2 with a hint", () => {
+  const tmp = tmpProject({ "content/a.md": "Plain.\n" });
+  const { code, stderr } = run(["--baseline"], tmp);
+  assert.strictEqual(code, 2);
+  assert.match(stderr, /--write-baseline/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("fenced code blocks are skipped by default, scanned with --include-code", () => {
+  const tmp = tmpProject({
+    "doc.md": "# Doc\n\n```text\nan example: delve into a robust plan\n```\n\nPlain prose here.\n",
+  });
+  const clean = run(["doc.md"], tmp);
+  assert.strictEqual(clean.code, 0, "tells inside a code fence should not count");
+  const dirty = run(["doc.md", "--include-code"], tmp);
+  assert.strictEqual(dirty.code, 1, "--include-code should scan the fence");
+  assert.match(dirty.out, /delve/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("slop-gate-ignore-next skips the following line", () => {
+  const tmp = tmpProject({
+    "doc.md": "{/* slop-gate-ignore-next */}\nWe will delve into this.\nBut robust here still fails.\n",
+  });
+  const { code, out } = run(["doc.md"], tmp);
+  assert.strictEqual(code, 1);
+  assert.doesNotMatch(out, /delve/, "line after the marker should be skipped");
+  assert.match(out, /robust/, "later lines are still scanned");
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test("walker prunes build output directories", () => {
+  const tmp = tmpProject({
+    "dist/a.md": "We will delve into this.\n",
+    "build/b.md": "A robust plan.\n",
+    ".next/c.md": "Seamless.\n",
+    "docs/d.md": "We will delve into this.\n",
+  });
+  const { code, out } = run([], tmp);
+  assert.strictEqual(code, 1);
+  assert.match(out, /docs\/d\.md/);
+  assert.doesNotMatch(out, /dist\//);
+  assert.doesNotMatch(out, /build\//);
+  assert.doesNotMatch(out, /\.next\//);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 

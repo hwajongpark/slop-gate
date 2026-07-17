@@ -42,5 +42,7 @@
     { "id": "crucial", "match": "\\bcrucial\\b", "hint": "Use 'important', or say why it matters." },
     { "id": "pivotal", "match": "\\bpivotal\\b", "hint": "Say what it determines." },
     { "id": "vibrant", "match": "\\bvibrant\\b", "hint": "Be specific about what you see." }
+    { "id": "surface", "match": "\\bsurface(es|ed|ing)?\\b", "hint": "Use 'bring', 'show', or whatever it actually does." }
+    { "id": "showcase", "match": "\\bshowcase(es|ed|ing)?\\b", "hint": "Use 'emphasize', 'demonstrate', or why it matters, plainly." }
   ]
 }

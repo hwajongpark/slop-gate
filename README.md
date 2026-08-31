@@ -46,7 +46,7 @@ Language packs are off by default. Turn on the ones you publish in:
 { "rules": ["punctuation", "vocabulary", "korean"] }
 ```
 
-The `korean`, `russian`, `vietnamese`, `chinese`, and `filipino` packs all ship today; each catches its own language's tells.
+The `korean`, `russian`, `vietnamese`, `chinese`, `filipino`, and `german` packs all ship today; each catches its own language's tells.
 
 ## The Problem
 
@@ -175,7 +175,7 @@ Commit the baseline file to your repo so CI and every contributor compare agains
 
 ## The rule packs
 
-Seven packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
+Eight packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
 
 - **`punctuation`** flags the em-dash, the single most common AI tell.
 - **`vocabulary`** flags around forty English words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
@@ -184,6 +184,7 @@ Seven packs ship in [`rules/`](rules), as plain JSON. The English packs are on b
 - **`vietnamese`** flags Hán-Việt overuse and calque connectors: `thực hiện`, `trong trường hợp`, `tuy nhiên`.
 - **`chinese`** flags 公文腔 (officialese): `进行`+noun padding, `予以`, `按照规定`, and stock openers like `众所周知`.
 - **`filipino`** flags over-formal literary Tagalog and calque openers (`upang`, `sa pamamagitan ng`, `Ito ay isang gabay`), where editorial Filipino is conversational Taglish.
+- **`german`** flags Übersetzungsdeutsch (translationese): English calques that parse correctly and read imported (`Fühlen Sie sich frei`, `wenn es darum geht`, `am Ende des Tages`, which in German means literally in the evening), consultant vocabulary German absorbed on its own (`Mehrwert`, `ganzheitlich`, `auf Augenhöhe`), and the sentence shapes that survive a synonym swap (`nicht X, sondern Y` and its mirror `X, nicht Y`). It is the one pack that runs case-sensitive: German capitalises every noun, so case carries meaning.
 
 Each rule carries a bilingual hint, the English reason plus the native-language fix. Turn a language pack on by adding it to `rules`, e.g. `"rules": ["punctuation", "vocabulary", "korean"]`.
 

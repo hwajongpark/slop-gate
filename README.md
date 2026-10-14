@@ -14,10 +14,11 @@
 
 Catch AI writing-tells before they reach your readers.
 
-slop-gate scans your prose for the patterns that mark writing as machine-generated: the em-dash, "leverage," "delve into," "a testament to," and the rest. It flags them while you can still fix them, on your machine or in CI, so the tells never ship. A style rule in a document is a suggestion you can skip. This is that rule made automatic.
+slop-gate scans your prose for the patterns that mark writing as machine-generated: the em-dash, `leverage`, `delve into`, `a testament to`, and the rest. It flags them while you can still fix them, on your machine or in CI, so the tells never ship. A style rule in a document is a suggestion you can skip. This is that rule made automatic.
 
 **Before**, an AI first draft (eight tells in two sentences):
 
+<!-- slop-gate-ignore-next -->
 > In today's fast-paced world, we are excited to delve into a robust, seamless solution that will empower your team — and unlock a whole new tapestry of possibilities. Feel free to reach out.
 
 **After**, once slop-gate flags them and a person rewrites:
@@ -30,10 +31,11 @@ slop-gate finds the tells. You write the fix.
 
 Humanizers like QuillBot and Undetectable AI are built for English. But in Korean, Russian, Vietnamese, Chinese, and Filipino, the fingerprint of AI-drafted or machine-translated text is *translationese* and over-formal register: stiff calques and bookish words a native writer would never reach for. An English-only linter is blind to all of it.
 
-slop-gate ships a pack per language, so the same check that flags "delve" in English flags `의 경우` in Korean. The Korean pack catches the 번역투 tells: `의 경우` (a calque of "in the case of"), `따라서` used as a written "therefore," the vague `~을 통해`, mechanical `첫째·둘째·셋째` lists, and the hedging `~것으로 보인다` that machine-translated news leans on.
+slop-gate ships a pack per language, so the same check that flags `delve` in English flags `의 경우` in Korean. The Korean pack catches the 번역투 tells: `의 경우` (a calque of "in the case of"), `따라서` used as a written "therefore," the vague `~을 통해`, mechanical `첫째·둘째·셋째` lists, and the hedging `~것으로 보인다` that machine-translated news leans on.
 
 **Before**, machine-translated Korean (five tells in three sentences):
 
+<!-- slop-gate-ignore-next -->
 > 외국인등록증의 경우 신청 절차가 복잡합니다. 따라서 미리 준비하는 것이 좋습니다. 또한 신청서를 통해 정보를 제출함으로써 처리가 진행됩니다.
 
 **After**, plain Korean a person writes:
@@ -50,7 +52,7 @@ The `korean`, `russian`, `vietnamese`, `chinese`, and `filipino` packs all ship 
 
 ## The Problem
 
-Large language models leave fingerprints. A handful of words and one punctuation mark show up far more often in AI-drafted text than in anything a person writes unprompted: the em-dash, "leverage," "delve into," "in today's fast-paced world," "a testament to." Readers have learned to spot them. The moment they do, your content reads as low-effort, and trust drops, even when the substance is fine.
+Large language models leave fingerprints. A handful of words and one punctuation mark show up far more often in AI-drafted text than in anything a person writes unprompted: the em-dash, `leverage`, `delve into`, `in today's fast-paced world`, `a testament to`. Readers have learned to spot them. The moment they do, your content reads as low-effort, and trust drops, even when the substance is fine.
 
 Code review catches broken code before it ships. Nothing catches this. So teams write a style rule in a doc, and the rule gets ignored, because a guideline you can skip is a guideline you will skip.
 
@@ -127,9 +129,17 @@ jobs:
 
 ## How It Works
 
-You point it at your text: a file, a directory, or a glob. It reads each file line by line and checks every line against two lists: a punctuation list (the em-dash) and a vocabulary list (the words and phrases that read as machine-generated). When a line matches, it prints the file, the line, the column, the exact text it found, and a one-line hint for what to do instead. If it found anything, it exits 1. If nothing matched your paths at all, it warns loudly on stderr that 0 files were scanned, so a misconfigured CI job can never look green by scanning nothing.
+You point it at your text: a file, a directory, or a glob. It reads each file line by line and checks every line against two lists: a punctuation list (the em-dash) and a vocabulary list (the words and phrases that read as machine-generated). When a line matches, it prints the file, the line, the column, the exact text it found, and a one-line hint for what to do instead. If it found anything, it exits 1. If nothing matched your paths at all, or any path or glob you named matched no files, it says so on stderr and exits 2, so a misconfigured CI job can never look green by scanning nothing.
 
-Fenced code blocks are skipped by default, because a code sample quoting bad copy is not your prose (scan them anyway with `--include-code`). One known limit of line-by-line scanning: a multi-word tell split across a hard line break is not matched.
+Fenced code blocks (backtick or tilde, per CommonMark) and inline code spans are skipped by default, because a code sample quoting bad copy is not your prose (scan them anyway with `--include-code`). URLs are never flagged: a link's address is not prose you can rewrite. Text is normalized to Unicode NFC before matching, so decomposed and precomposed accents match the same rules. One known limit of line-by-line scanning: a multi-word tell split across a hard line break is not matched.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Clean, or within the baseline. |
+| `1` | At least one tell was found, or the baseline was exceeded. |
+| `2` | Usage or config error, an invalid rule pattern, an unreadable file, an internal error, or no files matched. |
 
 That is the whole tool. No model, no network, no scoring. The lists are plain JSON you can read and edit.
 
@@ -151,11 +161,19 @@ Drop a `slop-gate.config.json` in your project root, or pass paths on the comman
 }
 ```
 
-- **`include` / `exclude`** are globs (`**` for any depth, `*` for one path segment).
+- **`include` / `exclude`** are globs (`**` for any depth, `*` for one path segment, braces like `**/*.{md,mdx}`). Build output folders (`node_modules`, `.git`, `.next`, `dist`, `build`) are skipped during discovery, unless you name one directly (`slop-gate build`). Symlinked files and folders are followed.
 - **`rules`** lists which built-in packs to load.
+- **`rulePacks`** lists paths to your own pack files, loaded in addition to `rules`. Paths resolve against the config file's folder: `"rulePacks": ["./slop-rules/house.json"]`.
 - **`allow`** turns specific rules off for specific paths. The example above keeps the em-dash banned everywhere except the Russian and Japanese content, where it is native punctuation. You can allowlist a whole pack by id, or a single rule by id.
 
-To skip one line on purpose, put `slop-gate-ignore` anywhere on it. Where an inline marker cannot go (MDX has no HTML comments), put `slop-gate-ignore-next` on the line above, for example `{/* slop-gate-ignore-next */}`.
+To skip one line on purpose, put `slop-gate-ignore` anywhere on it. To skip the line below instead, put the marker alone on its own line:
+
+```markdown
+<!-- slop-gate-ignore-next -->
+> An example paragraph that quotes the tells on purpose.
+```
+
+In MDX, where HTML comments are not valid, write `{/* slop-gate-ignore-next */}`. The marker skips the next non-blank line. If that line opens a fenced code block, the marker covers that block and nothing after it. A line that only mentions the marker in running text is not treated as one.
 
 ## Adopting on an existing codebase
 
@@ -169,16 +187,16 @@ npx slop-gate --write-baseline
 npx slop-gate --baseline
 ```
 
-`--baseline` fails only when a file's tell count grows past its baselined count, or when a file the baseline does not list has tells. Existing debt passes; new debt does not, so the number can only go down. When you clean a file below its baselined count, slop-gate reports the improvement and suggests re-running `--write-baseline` to lock the lower counts in.
+`--baseline` fails only when a rule's count in a file grows past its baselined count, or when a file the baseline does not list has tells. Counts are kept per rule, so trading one tell for a different one in the same file still fails. Existing debt passes; new debt does not, so the number can only go down. When you clean a file below its baselined count, slop-gate reports the improvement and suggests re-running `--write-baseline` to lock the lower counts in.
 
-Commit the baseline file to your repo so CI and every contributor compare against the same counts. Both flags take an optional `.json` path if you want the file somewhere else.
+Commit the baseline file to your repo so CI and every contributor compare against the same counts. Both flags take an optional `.json` path if you want the file somewhere else. Baselines written by 0.5.x (one total per file) are still read and compared by total; run `--write-baseline` once to switch to per-rule counts.
 
 ## The rule packs
 
 Seven packs ship in [`rules/`](rules), as plain JSON. The English packs are on by default; the language packs are opt-in:
 
 - **`punctuation`** flags the em-dash, the single most common AI tell.
-- **`vocabulary`** flags around forty English words and phrases, including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
+- **`vocabulary`** flags around forty English words and phrases (with their inflections, so `delved` and `leveraging` count too), including `delve`, `leverage`, `seamless`, `robust`, `tapestry`, `a testament to`, `in today's fast-paced world`, `feel free to`, and `at the end of the day`. Each one carries a hint for what to write instead.
 - **`korean`** flags 번역투 (translationese): the English calques and stiff written-register phrases that mark Korean text as AI-drafted or machine-translated.
 - **`russian`** flags канцелярит (bureaucratic Russian): the copula `является`, split-predicate verbs like `осуществить`, and ministry set-phrases.
 - **`vietnamese`** flags Hán-Việt overuse and calque connectors: `thực hiện`, `trong trường hợp`, `tuy nhiên`.
@@ -190,24 +208,25 @@ Each rule carries a bilingual hint, the English reason plus the native-language 
 A rule is just an id, a pattern, and a hint:
 
 ```json
-{ "id": "leverage", "match": "\\bleverage\\b", "hint": "Use 'use' or 'take advantage of'." }
+{ "id": "leverage", "match": "\\bleverag(e|es|ed|ing)\\b", "hint": "Use 'use' or 'take advantage of'." }
 ```
 
-Edit a pack to fit your house style, or add your own. The lists are the product, and they are meant to be read.
+A pack is a JSON file with an `id`, optional regex `flags` for all its rules (a rule can set its own), and a `rules` array. To add your own without forking, save a pack anywhere in your repo and list it in `rulePacks` in your config. The lists are the product, and they are meant to be read.
 
 ## Where the tells come from
 
 The lists are not guesses. They track documented phenomena, and you can read every entry and the reason behind it.
 
+<!-- slop-gate-ignore-next -->
 **The English tells track measured LLM word-frequency shifts.** Large studies of post-ChatGPT writing found a sudden rise in a specific set of words. [Liang et al. (*Nature Human Behaviour*, 2025)](https://www.nature.com/articles/s41562-025-02273-8) analysed over a million papers and flagged "realm," "intricate," "showcasing," and "pivotal" as words that were flat for a decade, then surged from 2023. A [2025 *Science Advances* study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12219543/) of 15 million biomedical abstracts found the same excess-vocabulary signal; "delve" alone rose about 1,500% between 2022 and 2024. The `vocabulary` pack flags those exact words.
 
 **The language packs track named linguistic phenomena.** Machine-drafted text carries a recognizable fingerprint, usually source-language calques, sometimes an over-formal register, and each language already has a name and an editorial tradition for it:
 
-- **Russian** — канцелярит, the bureaucratic register Kornei Chukovsky called the central disease of the language, and the target of Maxim Ilyakhov's standard plain-writing guide *Пиши, сокращай*.
-- **Korean** — 번역투, the translationese studied in Korean translation scholarship.
-- **Chinese** — 公文腔, the officialese register of government documents.
-- **Vietnamese** — Hán-Việt overuse, leaning on Sino-Vietnamese vocabulary where plain native words are simpler.
-- **Filipino** — over-formal literary Tagalog and po/opo register where editorial Filipino (Rappler, GMA) is conversational Taglish, plus calque openers like *sa kaso ng* ("in the case of").
+- **Russian**: канцелярит, the bureaucratic register Kornei Chukovsky called the central disease of the language, and the target of Maxim Ilyakhov's standard plain-writing guide *Пиши, сокращай*.
+- **Korean**: 번역투, the translationese studied in Korean translation scholarship.
+- **Chinese**: 公文腔, the officialese register of government documents.
+- **Vietnamese**: Hán-Việt overuse, leaning on Sino-Vietnamese vocabulary where plain native words are simpler.
+- **Filipino**: over-formal literary Tagalog and `po`/`opo` register where editorial Filipino (Rappler, GMA) is conversational Taglish, plus calque openers like `sa kaso ng` ("in the case of").
 
 The tool does not score or detect authorship; it flags the specific, documented patterns above so you can decide. Which entries make the list is an editorial call, but the categories are not invented.
 
@@ -221,15 +240,15 @@ The tool does not score or detect authorship; it flags the specific, documented 
 
 **Allowlist by path, because a tell in one language is grammar in another.** The em-dash is a tell in English marketing copy and native punctuation in Russian and Japanese: Russian uses it as the copula and for apposition, and Japanese uses the dash for pauses, parentheticals, and ranges. A global ban would force you to mangle the languages that use it. So rules turn off per path, and the rest of your text stays protected.
 
-**Zero dependencies.** A check you add to CI should not pull in a tree of packages that themselves need watching. It is one file of Node and two JSON lists. It runs anywhere Node 18 runs, offline.
+**Zero dependencies.** A check you add to CI should not pull in a tree of packages that themselves need watching. It is one file of Node and a folder of plain JSON rule lists. It runs anywhere Node 18 runs, offline.
 
-**It flags, you decide.** It points at the line and suggests a fix, but it does not rewrite your sentence. The right replacement for "leverage" depends on what you meant, and that is your call, not the tool's.
+**It flags, you decide.** It points at the line and suggests a fix, but it does not rewrite your sentence. The right replacement for `leverage` depends on what you meant, and that is your call, not the tool's.
 
 ## What It Does Not Do
 
 - It does not detect AI authorship. It flags patterns, not provenance.
 - It does not rewrite your text. It shows you the line; the edit is yours.
-- It does not understand context. "Robust" is fine in a statistics paper. Allowlist the rule for that path, or ignore the line.
+- It does not understand context. `robust` is fine in a statistics paper. Allowlist the rule for that path, or ignore the line.
 - It does not check grammar, spelling, or readability. Use a real linter for those. This does one narrow thing.
 - It does not match across line breaks. It scans line by line, so a multi-word tell split by a hard wrap ("a testament" at the end of one line, "to" at the start of the next) is missed. Text with unwrapped paragraphs is checked fully.
 
@@ -244,7 +263,7 @@ The tool does not score or detect authorship; it flags the specific, documented 
 The rule packs are the product, so the highest-value contribution is a tell. If a word or phrase reads as machine-generated to you and it is not on the list, open a pull request adding it to [`rules/vocabulary.json`](rules/vocabulary.json):
 
 ```json
-{ "id": "elevate", "match": "\\belevate\\b", "hint": "Say what actually improves." }
+{ "id": "elevate", "match": "\\belevat(e|es|ed|ing)\\b", "hint": "Say what actually improves." }
 ```
 
 One id, one pattern, one hint for what to write instead. False positives and bug reports are just as welcome: open an issue with the line that tripped.

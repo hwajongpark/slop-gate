@@ -16,7 +16,7 @@ const CLI = path.join(__dirname, "..", "bin", "slop-gate.js");
 const REPO = path.join(__dirname, "..");
 
 function run(args, cwd) {
-  const r = spawnSync("node", [CLI, ...args], {
+  const r = spawnSync(process.execPath, [CLI, ...args], {
     cwd: cwd || REPO,
     encoding: "utf8",
   });
@@ -116,11 +116,13 @@ test("glob arguments still work", () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-test("warns loudly when 0 files are scanned, still exits 0", () => {
+test("exits 2 when 0 files are scanned, so a misconfigured CI job cannot pass", () => {
   const tmp = tmpProject({ "notes.py": "delve = 1\n" });
   const { code, stderr } = run(["no-such-dir/**/*.md"], tmp);
-  assert.strictEqual(code, 0, "an empty match is not a failure");
-  assert.match(stderr, /warning: 0 files scanned/i);
+  assert.strictEqual(code, 2, "an empty match must not look green");
+  assert.match(stderr, /0 files scanned/i);
+  const viaConfig = run([], tmp);
+  assert.strictEqual(viaConfig.code, 2, "config include matching nothing also exits 2");
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -132,7 +134,11 @@ test("--write-baseline freezes counts and --baseline passes at parity", () => {
   assert.strictEqual(w.code, 0);
   assert.match(w.out, /baseline written/);
   const baseline = JSON.parse(fs.readFileSync(path.join(tmp, ".slop-gate-baseline.json"), "utf8"));
-  assert.strictEqual(baseline.files["content/a.md"], 2, "baseline should record per-file counts");
+  assert.deepStrictEqual(
+    baseline.files["content/a.md"],
+    { delve: 1, robust: 1 },
+    "baseline should record per-file, per-rule counts",
+  );
   const b = run(["--baseline"], tmp);
   assert.strictEqual(b.code, 0, "unchanged debt should pass the baseline");
   assert.match(b.out, /within the baseline/);
@@ -147,7 +153,7 @@ test("--baseline fails when a file's count grows", () => {
   fs.appendFileSync(path.join(tmp, "content/a.md"), "A seamless addition.\n");
   const { code, out } = run(["--baseline"], tmp);
   assert.strictEqual(code, 1, "grown count must fail");
-  assert.match(out, /content\/a\.md: 3 tells, baseline allows 2/);
+  assert.match(out, /content\/a\.md: 1 "seamless" tell, baseline allows 0/);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -222,5 +228,7 @@ test("walker prunes build output directories", () => {
   assert.doesNotMatch(out, /\.next\//);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
+
+require("./regressions.js")({ test, run, tmpProject });
 
 console.log(`\n${passed} passed`);

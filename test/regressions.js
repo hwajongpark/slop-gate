@@ -457,4 +457,16 @@ module.exports = function register({ test, run, tmpProject }) {
     assert.strictEqual(fromSite.code, 0, fromSite.out);
     fs.rmSync(tmp, { recursive: true, force: true });
   });
+
+  test("--baseline on some paths does not call unscanned files improved", () => {
+    const tmp = tmpProject({ "docs/a.md": "We delve.\n", "docs/b.md": "A robust plan.\n" });
+    run(["--write-baseline"], tmp);
+    const partial = run(["--baseline", "docs/a.md"], tmp);
+    assert.strictEqual(partial.code, 0);
+    assert.doesNotMatch(partial.out, /improved/);
+    fs.writeFileSync(path.join(tmp, "docs/b.md"), "Plain.\n");
+    const full = run(["--baseline"], tmp);
+    assert.match(full.out, /1 file improved/);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
 };

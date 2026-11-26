@@ -722,7 +722,7 @@ function writeBaseline(file, findings, filesScanned) {
   return 0;
 }
 
-function runBaselineCheck(file, findings, asJson) {
+function runBaselineCheck(file, findings, asJson, scannedFiles) {
   if (!fs.existsSync(file)) {
     fail(
       `baseline not found: ${file}. Create one first: slop-gate --write-baseline${file === DEFAULT_BASELINE ? "" : ` ${file}`}`,
@@ -765,8 +765,12 @@ function runBaselineCheck(file, findings, asJson) {
       fail(`baseline ${file}: entry for "${f}" must be a number or an object of rule counts`);
     }
   }
+  // A baselined file with no tells now has improved, but only if this run
+  // scanned it. A run on a few paths must not report every other file as
+  // cleaned (and invite a --write-baseline that would drop them).
+  const scanned = new Set(scannedFiles || []);
   for (const [f, cap] of Object.entries(allowed)) {
-    if (f in counts) continue;
+    if (f in counts || !scanned.has(f)) continue;
     const n = typeof cap === "number" ? cap : cap && typeof cap === "object" ? sum(cap) : 0;
     if (n > 0) improved.push(f);
   }
@@ -860,7 +864,7 @@ function run(argv) {
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.col - b.col);
 
   if (opts.writeBaseline) return writeBaseline(opts.writeBaseline, findings, files.length);
-  if (opts.baseline) return runBaselineCheck(opts.baseline, findings, opts.json);
+  if (opts.baseline) return runBaselineCheck(opts.baseline, findings, opts.json, files);
 
   if (opts.json) {
     process.stdout.write(JSON.stringify(findings, null, 2) + "\n");
@@ -882,6 +886,14 @@ function run(argv) {
 }
 
 function main() {
+  // A reader that closes the pipe early (slop-gate . | head) is not an error:
+  // stop writing and exit with the code the run already decided on.
+  for (const stream of [process.stdout, process.stderr]) {
+    stream.on("error", (e) => {
+      if (e && e.code === "EPIPE") process.exit(process.exitCode || 0);
+      throw e;
+    });
+  }
   let code;
   try {
     code = run(process.argv.slice(2));

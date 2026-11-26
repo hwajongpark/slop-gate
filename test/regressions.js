@@ -436,4 +436,25 @@ module.exports = function register({ test, run, tmpProject }) {
     assert.match(grown.out, /3 tells, baseline allows 2/);
     fs.rmSync(tmp, { recursive: true, force: true });
   });
+
+  // ---- H. 0.6.1 fixes -----------------------------------------------------
+
+  test("exclude and allow globs resolve against the config's folder under -c", () => {
+    const tmp = tmpProject({
+      "site/slop-gate.config.json": JSON.stringify({
+        include: ["content/**/*.md"],
+        exclude: ["content/drafts/**"],
+        allow: [{ paths: ["content/ru/**"], rules: ["em-dash"] }],
+      }),
+      "site/content/ru/a.md": "Москва — столица.\n",
+      "site/content/drafts/d.md": "We delve.\n",
+      "site/content/en/e.md": "Plain.\n",
+    });
+    const fromParent = run(["-c", "site/slop-gate.config.json"], tmp);
+    assert.strictEqual(fromParent.code, 0, fromParent.out);
+    assert.match(fromParent.out, /clean \(2 files scanned\)/);
+    const fromSite = run([], path.join(tmp, "site"));
+    assert.strictEqual(fromSite.code, 0, fromSite.out);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
 };

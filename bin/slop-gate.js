@@ -259,6 +259,13 @@ function displayPath(abs) {
   return toPosix(rel || ".");
 }
 
+// The path relative to the config file's folder. "exclude" and "allow" globs
+// are written against the config's folder (as "include" is), so they must
+// still match when the run starts elsewhere (slop-gate -c site/slop-gate.config.json).
+function configPath(abs, config) {
+  return toPosix(path.relative(config.dir, abs) || ".");
+}
+
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
@@ -507,7 +514,13 @@ function collectFiles(config, cliPaths) {
       for (const [abs, rel] of walk(src.base)) {
         if (!matchesAny(src.patterns, rel)) continue;
         const display = displayPath(abs);
-        if (matchesAny(excludeRes, display) || matchesAny(excludeRes, rel)) continue;
+        if (
+          matchesAny(excludeRes, display) ||
+          matchesAny(excludeRes, rel) ||
+          matchesAny(excludeRes, configPath(abs, config))
+        ) {
+          continue;
+        }
         out.add(display);
         hits++;
       }
@@ -524,12 +537,15 @@ function collectFiles(config, cliPaths) {
 
 // Rule ids that are allowlisted for a given file, summed over every allow
 // entry whose path globs match. This is how you keep the em-dash legal in a
-// Russian or Japanese directory while banning it everywhere else.
-function suppressedRules(file, allow) {
+// Russian or Japanese directory while banning it everywhere else. A glob may
+// match the path as displayed (relative to cwd) or relative to the config.
+function suppressedRules(file, allow, config) {
+  const candidates = [file];
+  if (config && config.dir) candidates.push(configPath(path.resolve(file), config));
   const off = new Set();
   for (const entry of allow) {
     const globs = (entry.paths || []).flatMap(globRegExps);
-    if (matchesAny(globs, file)) {
+    if (candidates.some((c) => matchesAny(globs, c))) {
       for (const id of entry.rules || []) off.add(id);
     }
   }
@@ -651,8 +667,8 @@ function scanText(file, text, rules, opts) {
   return findings;
 }
 
-function scanFile(file, rules, allow, opts) {
-  const off = suppressedRules(file, allow);
+function scanFile(file, rules, config, opts) {
+  const off = suppressedRules(file, config.allow, config);
   const active = rules.filter((r) => !off.has(r.id) && !off.has(r.pack));
   let text;
   try {
@@ -840,7 +856,7 @@ function run(argv) {
   }
 
   const findings = [];
-  for (const f of files) findings.push(...scanFile(f, rules, config.allow, opts));
+  for (const f of files) findings.push(...scanFile(f, rules, config, opts));
   findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.col - b.col);
 
   if (opts.writeBaseline) return writeBaseline(opts.writeBaseline, findings, files.length);

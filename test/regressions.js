@@ -469,4 +469,34 @@ module.exports = function register({ test, run, tmpProject }) {
     assert.match(full.out, /1 file improved/);
     fs.rmSync(tmp, { recursive: true, force: true });
   });
+
+  test("an unclosed fence warns that the rest of the file was skipped", () => {
+    const tmp = tmpProject({ "a.md": "Intro.\n\n```js\nconst x = 1;\n\nWe delve.\n" });
+    const { code, stderr } = run(["a.md"], tmp);
+    assert.strictEqual(code, 0, "the exit code is unchanged");
+    assert.match(stderr, /a\.md:3: this code fence is never closed/);
+    const closed = run(["a.md", "--include-code"], tmp);
+    assert.doesNotMatch(closed.stderr, /never closed/, "--include-code scans the block anyway");
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test("an allow entry naming an unknown rule id warns", () => {
+    const tmp = tmpProject({
+      "a.md": "A \u2014 B\n",
+      "slop-gate.config.json": JSON.stringify({ allow: [{ paths: ["**"], rules: ["emdash", "punctuation"] }] }),
+    });
+    const { code, stderr } = run(["a.md"], tmp);
+    assert.strictEqual(code, 0, "the pack id still turns the em-dash off");
+    assert.match(stderr, /allow\[0\] names "emdash"/);
+    assert.doesNotMatch(stderr, /"punctuation"/);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test("a config path that is a folder exits 2 with a clear message", () => {
+    const tmp = tmpProject({ "a.md": "Plain.\n", "cfg/x.txt": "" });
+    const { code, stderr } = run(["-c", "cfg", "a.md"], tmp);
+    assert.strictEqual(code, 2);
+    assert.match(stderr, /config is a folder/);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
 };

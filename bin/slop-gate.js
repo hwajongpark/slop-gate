@@ -316,6 +316,7 @@ function loadConfig(explicitPath) {
     if (explicitPath) fail(`config not found: ${explicitPath}`);
     return { ...DEFAULT_CONFIG, dir: process.cwd() };
   }
+  if (fs.statSync(file).isDirectory()) fail(`config is a folder, not a file: ${file}`);
   let parsed;
   try {
     parsed = JSON.parse(stripBom(fs.readFileSync(file, "utf8")));
@@ -608,6 +609,7 @@ function scanText(file, text, rules, opts) {
   const lines = stripBom(text).split(/\r?\n|\r/);
   const findings = [];
   let fence = null; // the open fence while inside a fenced code block
+  let fenceLine = 0; // where that fence opened
   let skipNext = false; // a pending slop-gate-ignore-next marker
   let skipFence = false; // that marker landed on a fence: skip the whole block
   for (let i = 0; i < lines.length; i++) {
@@ -624,6 +626,7 @@ function scanText(file, text, rules, opts) {
       const open = fenceOpen(line);
       if (open) {
         fence = open;
+        fenceLine = i + 1;
         if (skipNext) {
           skipNext = false;
           skipFence = true;
@@ -663,6 +666,11 @@ function scanText(file, text, rules, opts) {
         hint: h.rule.hint,
       });
     }
+  }
+  // An unclosed fence runs to the end of the file (CommonMark), so a stray
+  // ``` would quietly stop the check. Say so; the exit code is unchanged.
+  if (fence !== null && (!opts.includeCode || skipFence) && typeof opts.warn === "function") {
+    opts.warn(`${file}:${fenceLine}: this code fence is never closed, so the rest of the file was not scanned.`);
   }
   return findings;
 }
@@ -820,6 +828,25 @@ function runBaselineCheck(file, findings, asJson, scannedFiles) {
   return 0;
 }
 
+// An allow entry that names a rule or pack id nothing loaded has is usually a
+// typo ("emdash" for "em-dash"): the tell keeps firing and the cause is hidden.
+function warnUnknownAllowIds(allow, rules) {
+  const known = new Set();
+  for (const r of rules) {
+    known.add(r.id);
+    known.add(r.pack);
+  }
+  allow.forEach((entry, i) => {
+    for (const id of entry.rules || []) {
+      if (!known.has(id)) {
+        console.error(
+          `slop-gate: warning: allow[${i}] names "${id}", which is not a loaded rule or pack id.`,
+        );
+      }
+    }
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Output and main
 // ---------------------------------------------------------------------------
@@ -847,6 +874,8 @@ function run(argv) {
 
   const config = loadConfig(opts.config);
   const rules = loadRules(config.rules, config.rulePacks, config.dir);
+  warnUnknownAllowIds(config.allow, rules);
+  opts.warn = (msg) => console.error(`slop-gate: warning: ${msg}`);
   const { files, unmatched } = collectFiles(config, opts.paths);
 
   if (files.length === 0 || unmatched.length) {

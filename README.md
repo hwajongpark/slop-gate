@@ -16,7 +16,7 @@ Catch AI writing-tells before they reach your readers.
 
 slop-gate scans your prose for the patterns that mark writing as machine-generated: the em-dash, `leverage`, `delve into`, `a testament to`, and the rest. It flags them while you can still fix them, on your machine or in CI, so the tells never ship. A style rule in a document is a suggestion you can skip. This is that rule made automatic.
 
-**Before**, an AI first draft (eight tells in two sentences):
+**Before**, an AI first draft (nine tells in two sentences):
 
 <!-- slop-gate-ignore-next -->
 > In today's fast-paced world, we are excited to delve into a robust, seamless solution that will empower your team — and unlock a whole new tapestry of possibilities. Feel free to reach out.
@@ -120,10 +120,10 @@ jobs:
   slop-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - run: npx slop-gate ./content
 ```
 
@@ -131,7 +131,7 @@ jobs:
 
 You point it at your text: a file, a directory, or a glob. It reads each file line by line and checks every line against two lists: a punctuation list (the em-dash) and a vocabulary list (the words and phrases that read as machine-generated). When a line matches, it prints the file, the line, the column, the exact text it found, and a one-line hint for what to do instead. If it found anything, it exits 1. If nothing matched your paths at all, or any path or glob you named matched no files, it says so on stderr and exits 2, so a misconfigured CI job can never look green by scanning nothing.
 
-Fenced code blocks (backtick or tilde, per CommonMark) and inline code spans are skipped by default, because a code sample quoting bad copy is not your prose (scan them anyway with `--include-code`). URLs are never flagged: a link's address is not prose you can rewrite. Text is normalized to Unicode NFC before matching, so decomposed and precomposed accents match the same rules. One known limit of line-by-line scanning: a multi-word tell split across a hard line break is not matched.
+Fenced code blocks (backtick or tilde, per CommonMark) and inline code spans are skipped by default, because a code sample quoting bad copy is not your prose (scan them anyway with `--include-code`). A fence that is never closed runs to the end of the file, as Markdown renders it, so slop-gate warns on stderr with the line it opened on. URLs are never flagged: a link's address is not prose you can rewrite. Text is normalized to Unicode NFC before matching, so decomposed and precomposed accents match the same rules. One known limit of line-by-line scanning: a multi-word tell split across a hard line break is not matched.
 
 ### Exit codes
 
@@ -161,10 +161,10 @@ Drop a `slop-gate.config.json` in your project root, or pass paths on the comman
 }
 ```
 
-- **`include` / `exclude`** are globs (`**` for any depth, `*` for one path segment, braces like `**/*.{md,mdx}`). Build output folders (`node_modules`, `.git`, `.next`, `dist`, `build`) are skipped during discovery, unless you name one directly (`slop-gate build`). Symlinked files and folders are followed.
+- **`include` / `exclude`** are globs (`**` for any depth, `*` for one path segment, `?` for one character, braces like `**/*.{md,mdx}`), relative to the config file's folder. Build output folders (`node_modules`, `.git`, `.next`, `dist`, `build`) are skipped during discovery, unless you name one directly (`slop-gate build`). Symlinked files and folders are followed.
 - **`rules`** lists which built-in packs to load.
 - **`rulePacks`** lists paths to your own pack files, loaded in addition to `rules`. Paths resolve against the config file's folder: `"rulePacks": ["./slop-rules/house.json"]`.
-- **`allow`** turns specific rules off for specific paths. The example above keeps the em-dash banned everywhere except the Russian and Japanese content, where it is native punctuation. You can allowlist a whole pack by id, or a single rule by id.
+- **`allow`** turns specific rules off for specific paths (globs, relative to the config file's folder). The example above keeps the em-dash banned everywhere except the Russian and Japanese content, where it is native punctuation. You can allowlist a whole pack by id, or a single rule by id.
 
 To skip one line on purpose, put `slop-gate-ignore` anywhere on it. To skip the line below instead, put the marker alone on its own line:
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.6.1
+
+### Fixes
+
+- **`exclude` and `allow` resolve against the config file's folder.** With `-c site/slop-gate.config.json` run from another folder, `include` already resolved against the config's folder, but `exclude` and `allow` were matched against paths relative to the current folder, so excluded files were scanned and allowlisted rules still fired. Both now also match the config-relative path.
+- **`--baseline` on a few paths** no longer reports every other baselined file as "improved". Only files the run scanned count.
+- **Piping into a reader that closes early** (`slop-gate . | head`) exits quietly with the run's exit code instead of printing a Node EPIPE stack trace.
+- A config path that points at a folder exits 2 with a plain message.
+
+### Warnings (stderr only; exit codes unchanged)
+
+- A code fence that is never closed names the file and line, because everything after it is skipped as code.
+- An `allow` entry that names a rule or pack id no loaded pack has (a typo like `emdash`) is reported.
+
+### Project
+
+- CI runs on Node 18, 22, 24, and 26 with `actions/checkout@v7` and `actions/setup-node@v7`. Node 20 is end of life. The README's CI snippet uses Node 24.
+- README: the first example has nine tells, not eight.
+
 ## 0.6.0
 
 ### Breaking
